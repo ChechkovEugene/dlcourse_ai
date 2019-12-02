@@ -126,9 +126,6 @@ class ReLULayer:
         # to use it later in the backward pass
         self.X = Param(X)
         
-        self.X.grad = np.zeros(X.shape)
-        self.X.grad = 1.0*(X>0)
-        
         output = np.zeros(X.shape)
         output = np.maximum(0, X)
         
@@ -148,6 +145,9 @@ class ReLULayer:
         """
         # TODO: Implement backward pass
         # Your final implementation shouldn't have any loops
+        self.X.grad = np.zeros(self.X.value.shape)
+        self.X.grad = 1.0*(self.X.value>0)
+        
         d_result = np.zeros(self.X.value.shape)
         d_result = self.X.grad * d_out
         
@@ -167,7 +167,11 @@ class FullyConnectedLayer:
     def forward(self, X):
         # TODO: Implement forward pass
         # Your final implementation shouldn't have any loops
-        raise Exception("Not implemented!")
+        self.X = Param(X)
+      
+        output = np.dot(self.X.value, self.W.value) + self.B.value
+        
+        return output
 
     def backward(self, d_out):
         """
@@ -191,8 +195,10 @@ class FullyConnectedLayer:
         # It should be pretty similar to linear classifier from
         # the previous assignment
 
-        raise Exception("Not implemented!")
-
+        self.W.grad = np.dot(self.X.value.T, d_out)
+        self.B.grad = np.sum(d_out, axis=0).reshape(1, -1)
+        d_input = np.dot(d_out, self.W.value.T)
+        
         return d_input
 
     def params(self):
