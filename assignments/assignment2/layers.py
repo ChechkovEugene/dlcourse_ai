@@ -118,13 +118,21 @@ class Param:
 
 class ReLULayer:
     def __init__(self):
-        pass
+        self.X = None
 
     def forward(self, X):
         # TODO: Implement forward pass
         # Hint: you'll need to save some information about X
         # to use it later in the backward pass
-        raise Exception("Not implemented!")
+        self.X = Param(X)
+        
+        self.X.grad = np.zeros(X.shape)
+        self.X.grad = 1.0*(X>0)
+        
+        output = np.zeros(X.shape)
+        output = np.maximum(0, X)
+        
+        return output
 
     def backward(self, d_out):
         """
@@ -140,7 +148,9 @@ class ReLULayer:
         """
         # TODO: Implement backward pass
         # Your final implementation shouldn't have any loops
-        raise Exception("Not implemented!")
+        d_result = np.zeros(self.X.value.shape)
+        d_result = self.X.grad * d_out
+        
         return d_result
 
     def params(self):
