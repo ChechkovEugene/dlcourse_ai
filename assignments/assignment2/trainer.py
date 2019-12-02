@@ -100,7 +100,18 @@ class Trainer:
                 # use model to generate loss and gradients for all
                 # the params
 
-                raise Exception("Not implemented!")
+                batch = self.dataset.train_X[batch_indices]
+                target_index = self.dataset.train_y[batch_indices]
+                
+                loss = self.model.compute_loss_and_gradients(batch, target_index)
+            
+#                 ce_loss, ce_grad = linear_softmax(batch, self.W, target_index)
+#                 reg_loss, reg_grad = l2_regularization(self.W, reg)
+            
+#                 loss = ce_loss + reg_loss
+#                 loss_history.append(loss)
+            
+#                 self.W = self.W - learning_rate*(ce_grad + reg_grad)
 
                 for param_name, param in self.model.params().items():
                     optimizer = self.optimizers[param_name]
@@ -110,7 +121,7 @@ class Trainer:
 
             if np.not_equal(self.learning_rate_decay, 1.0):
                 # TODO: Implement learning rate decay
-                raise Exception("Not implemented!")
+                self.learning_rate *= self.learning_rate_decay
 
             ave_loss = np.mean(batch_losses)
 

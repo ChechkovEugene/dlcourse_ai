@@ -1,3 +1,5 @@
+import numpy as np
+
 def multiclass_accuracy(prediction, ground_truth):
     """
     Computes metrics for multiclass classification
