@@ -45,15 +45,16 @@ def cross_entropy_loss(probs, target_index):
     y = np.zeros(probs.shape)
     
     if isinstance(target_index, int):
+        n = 1
         y[target_index] = True
     else:
+        n = target_index.shape[0]
         cols = np.arange(0, probs.shape[0])
         y[cols, target_index.flatten()] = True
         
-    loss = -np.sum(y * np.log(probs))
+    loss = -np.sum(y * np.log(probs))/n
 
     return loss
-
 
 def l2_regularization(W, reg_strength):
     """
@@ -93,8 +94,10 @@ def softmax_with_cross_entropy(preds, target_index):
     y = np.zeros(preds.shape)
     
     if isinstance(target_index, int):
+        n = 1
         y[target_index] = True
     else:
+        n = target_index.shape[0]
         cols = np.arange(0, preds.shape[0])
         y[cols, target_index.flatten()] = True
         
@@ -102,8 +105,7 @@ def softmax_with_cross_entropy(preds, target_index):
     loss = cross_entropy_loss(sm, target_index)
     d_preds = sm - y
 
-    return loss, d_preds
-
+    return loss, d_preds/n
 
 class Param:
     """
@@ -124,7 +126,9 @@ class ReLULayer:
         # TODO: Implement forward pass
         # Hint: you'll need to save some information about X
         # to use it later in the backward pass
-        self.X = Param(X)
+        self.X = Param(X.copy())
+        self.X.grad = np.zeros(self.X.value.shape)
+        self.X.grad = 1.0*(self.X.value>0)
         
         output = np.zeros(X.shape)
         output = np.maximum(0, X)
@@ -145,8 +149,6 @@ class ReLULayer:
         """
         # TODO: Implement backward pass
         # Your final implementation shouldn't have any loops
-        self.X.grad = np.zeros(self.X.value.shape)
-        self.X.grad = 1.0*(self.X.value>0)
         
         d_result = np.zeros(self.X.value.shape)
         d_result = self.X.grad * d_out
@@ -167,7 +169,7 @@ class FullyConnectedLayer:
     def forward(self, X):
         # TODO: Implement forward pass
         # Your final implementation shouldn't have any loops
-        self.X = Param(X)
+        self.X = Param(X.copy())
       
         output = np.dot(self.X.value, self.W.value) + self.B.value
         
@@ -195,8 +197,8 @@ class FullyConnectedLayer:
         # It should be pretty similar to linear classifier from
         # the previous assignment
 
-        self.W.grad = np.dot(self.X.value.T, d_out)
-        self.B.grad = np.sum(d_out, axis=0).reshape(1, -1)
+        self.W.grad += np.dot(self.X.value.T, d_out)
+        self.B.grad += np.sum(d_out, axis=0).reshape(1, -1)
         d_input = np.dot(d_out, self.W.value.T)
         
         return d_input

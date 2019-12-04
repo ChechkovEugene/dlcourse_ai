@@ -1,6 +1,6 @@
 import numpy as np
 
-from layers import FullyConnectedLayer, ReLULayer, softmax_with_cross_entropy, l2_regularization
+from layers import FullyConnectedLayer, ReLULayer, softmax, softmax_with_cross_entropy, l2_regularization
 
 
 class TwoLayerNet:
@@ -19,6 +19,7 @@ class TwoLayerNet:
         self.reg = reg
         # TODO Create necessary layers
         self.fc1 = FullyConnectedLayer(n_input, hidden_layer_size)
+        self.relu = ReLULayer()
         self.fc2 = FullyConnectedLayer(hidden_layer_size, n_output)
     
     def compute_loss_and_gradients(self, X, y):
@@ -35,36 +36,47 @@ class TwoLayerNet:
         # TODO Set parameter gradient to zeros
         # Hint: using self.params() might be useful!
         for name, param in self.params().items():
-            param.grad = None
+            param.grad = np.zeros_like(param.value)
         
         # TODO Compute loss and fill param gradients
         # by running forward and backward passes through the model
         fc1_out = self.fc1.forward(X)
-        fc2_out = self.fc2.forward(fc1_out)
+        relu_out = self.relu.forward(fc1_out)
+        fc2_out = self.fc2.forward(relu_out)
+        
         loss, out_grad = softmax_with_cross_entropy(fc2_out, y)
         
         fc2_back = self.fc2.backward(out_grad)
-        dW2 = self.fc2.params()['W'].grad
-        dB2 = self.fc2.params()['B'].grad
+        relu_back = self.relu.backward(fc2_back)
+        fc1_back = self.fc1.backward(relu_back)
         
-        fc2W_l, dW2_l = l2_regularization(self.fc2.params()['W'].value, self.reg)
-        fc2B_l, dB2_l = l2_regularization(self.fc2.params()['B'].value, self.reg)
+        for param in self.params().values():
+            loss_l2, grad_l2 = l2_regularization(param.value, self.reg)
+            loss += loss_l2
+            param.grad += grad_l2
+        
+#         fc2_back = self.fc2.backward(out_grad)
+#         dW2 = self.fc2.params()['W'].grad
+#         dB2 = self.fc2.params()['B'].grad
+        
+#         fc2W_l, dW2_l = l2_regularization(self.fc2.params()['W'].value, self.reg)
+#         fc2B_l, dB2_l = l2_regularization(self.fc2.params()['B'].value, self.reg)
 
-        fc1_back = self.fc1.backward(fc2_back)
-        dW1 = self.fc1.params()['W'].grad
-        dB1 = self.fc1.params()['B'].grad
+#         fc1_back = self.fc1.backward(fc2_back)
+#         dW1 = self.fc1.params()['W'].grad
+#         dB1 = self.fc1.params()['B'].grad
         
-        fc1W_l, dW1_l = l2_regularization(self.fc1.params()['W'].value, self.reg)
-        fc1B_l, dB1_l = l2_regularization(self.fc1.params()['B'].value, self.reg)
+#         fc1W_l, dW1_l = l2_regularization(self.fc1.params()['W'].value, self.reg)
+#         fc1B_l, dB1_l = l2_regularization(self.fc1.params()['B'].value, self.reg)
         
-        # After that, implement l2 regularization on all params
-        # Hint: self.params() is useful again!
-        self.fc2.params()['W'].grad = dW2 + dW2_l
-        self.fc2.params()['B'].grad = dB2 + dB2_l 
-        self.fc1.params()['W'].grad = dW1 + dW1_l
-        self.fc1.params()['B'].grad = dB1 + dB1_l
+#         # After that, implement l2 regularization on all params
+#         # Hint: self.params() is useful again!
+#         self.fc2.params()['W'].grad = dW2 + dW2_l
+#         self.fc2.params()['B'].grad = dB2 + dB2_l 
+#         self.fc1.params()['W'].grad = dW1 + dW1_l
+#         self.fc1.params()['B'].grad = dB1 + dB1_l
 
-        return loss + fc2W_l + fc2B_l + fc1W_l + fc1B_l
+        return loss
 
     def predict(self, X):
         """
@@ -82,8 +94,14 @@ class TwoLayerNet:
         pred = np.zeros(X.shape[0], np.int)
 
         fc1_out = self.fc1.forward(X)
-        fc2_out = self.fc2.forward(fc1_out)
-        pred = np.argmax(fc2_out, axis = 1)
+#         print("FC1 {}".format(fc1_out))
+        relu_out = self.relu.forward(fc1_out)
+#         print("RELU {}".format(relu_out))
+        fc2_out = self.fc2.forward(relu_out)
+#         print("FC2 {}".format(fc2_out))
+#         print("Softmax {}".format(softmax(fc2_out)))
+        pred = np.argmax(softmax(fc2_out), axis = 1)
+#         print("PRED {}".format(pred))
         return pred
 
     def params(self):

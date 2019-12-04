@@ -104,14 +104,6 @@ class Trainer:
                 target_index = self.dataset.train_y[batch_indices]
                 
                 loss = self.model.compute_loss_and_gradients(batch, target_index)
-            
-#                 ce_loss, ce_grad = linear_softmax(batch, self.W, target_index)
-#                 reg_loss, reg_grad = l2_regularization(self.W, reg)
-            
-#                 loss = ce_loss + reg_loss
-#                 loss_history.append(loss)
-            
-#                 self.W = self.W - learning_rate*(ce_grad + reg_grad)
 
                 for param_name, param in self.model.params().items():
                     optimizer = self.optimizers[param_name]

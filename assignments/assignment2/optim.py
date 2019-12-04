@@ -44,6 +44,5 @@ class MomentumSGD:
         # Hint: you'll need to introduce some variables to remember
         # velocity from the previous updates
         self.velocity = self.momentum * self.velocity - learning_rate * d_w
-        w = w + self.velocity
         
-        return w  
+        return w + self.velocity  
